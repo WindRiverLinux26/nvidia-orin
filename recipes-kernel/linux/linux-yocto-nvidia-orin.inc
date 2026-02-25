@@ -1,13 +1,14 @@
 #
-# Copyright (C) 2025 Wind River Systems, Inc.
+# Copyright (C) 2026 Wind River Systems, Inc.
 #
 
 COMPATIBLE_MACHINE:nvidia-orin = "nvidia-orin"
 
 TARGET_SUPPORTED_KTYPES:nvidia-orin = "standard preempt-rt"
 
-KMACHINE:nvidia-orin-agx = "nvidia-orin-nx"
-KMACHINE:nvidia-orin-nano = "nvidia-orin-nx"
+KMACHINE:nvidia-orin-agx = "nvidia-orin"
+KMACHINE:nvidia-orin-nano = "nvidia-orin"
+KMACHINE:nvidia-orin-nx = "nvidia-orin"
 
 KERNEL_DTC_FLAGS:append:nvidia-orin = " -@"
 
