@@ -7,10 +7,8 @@
 2. BSP Kernel and Distros
 3. Board Specific Patches
 4. Build Instructions
-   4.1 Setup BSP project
-   4.2 Setup environment and create a build directory
-   4.3 Setup local.conf
-   4.4 Build project
+   4.1 Basic feautre BSP
+   4.2 Full feautre BSP
 5. Deploy Instructions
    5.1 Create Deploying Environment
    5.2 Connect NVIDIA Orin Board with Host
@@ -66,7 +64,7 @@ is done automatically when using the Wind River configure wrapper.
 
 License
 -------
-Copyright (C) 2025 Wind River Systems, Inc.
+Copyright (C) 2026 Wind River Systems, Inc.
 
 Source code included in the tree for individual recipes is under the LICENSE
 stated in the associated recipe (.bb file) unless otherwise stated.
@@ -115,229 +113,49 @@ To get a list of patches applied to the kernel specific to this BSP along with
 patch descriptions use git-whatchanged on the default kernel. For example:
 
   $ cd tmp-glibc/work-shared/<bsp_name>/kernel-source
-  $ git whatchanged v6.12/standard/base..v6.12/standard/nvidia-sdk-5.15/nvidia-soc
+  $ git whatchanged v6.18/standard/base..v6.18/standard/nvidia-soc
 
 
 4. Build Instructions
 =====================
 
-Because there are lots of packages under the NVIDIA Proprietary license, they are not
-able to be integrated into WRLinux product. Based on this reason, users need to build
-NVIDIA BSP with network enabled environment so that these NVIDIA Proprietary packages
-are able to be downloaded during building project.
-
-Note: If users want to integrate NVIDIA Proprietary package into their own product,
-      they MUST consult NVIDIA and their own legal department.
-
-4.1 Setup BSP project
+4.1 Basic feautre BSP
 ---------------------
 
-	For NVIDIA Orin AGX:
+This basic BSP only supports some common devices. For example, network, USB, eMMC and so on.
+
+4.1.1 Setup BSP project
+-----------------------
+
 	--machine nvidia-orin-agx --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes
 
-	For NVIDIA Orin Nano(Boot from NVME):
-	--machine nvidia-orin-nano --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes
-
-	For NVIDIA Orin Nano(Boot from SD):
-	--machine nvidia-orin-nano --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes --templates feature/sd_boot
-
-4.2 Setup environment and create a build directory
---------------------------------------------------
+4.1.2 Setup environment and create a build directory
+----------------------------------------------------
 
 	$ . environment-setup-x86_64-wrlinuxsdk-linux
 	$ . oe-init-build-env [<build>]
 
-4.3 Setup local.conf
---------------------
-
-Add below configurations at the end of local.conf
-
-BB_NO_NETWORK = '0'
-LICENSE_FLAGS_ACCEPTED += "commercial_faad2 commercial_x264 commercial"
-BUILD_NVIDIA_PROPRIETARY_PACKAGE = "1"
-
-CUSTOMER_RECIPES:meta-python += 'python3-kconfiglib'
-CUSTOMER_RECIPES:openembedded-layer += 'libglvnd'
-CUSTOMER_RECIPES:openembedded-layer += 'faad2'
-CUSTOMER_RECIPES:networking-layer += 'mosquitto'
-CUSTOMER_RECIPES:openembedded-layer += 'libwebsockets'
-CUSTOMER_RECIPES:openembedded-layer += 'uthash'
-CUSTOMER_RECIPES:meta-python += 'python3-smbus2'
-
-CUSTOMER_RECIPES:tegra += 'tegra-flashtools'
-CUSTOMER_RECIPES:tegra += 'tegra-bootfiles'
-CUSTOMER_RECIPES:tegra += 'tegra-minimal-initramfs'
-CUSTOMER_RECIPES:tegra += 'tegra-espimage'
-CUSTOMER_RECIPES:tegra += 'edk2-firmware-tegra'
-CUSTOMER_RECIPES:tegra += 'tegra-tools'
-CUSTOMER_RECIPES:tegra += 'edk2-firmware-tegra-minimal'
-CUSTOMER_RECIPES:tegra += 'tegra-initrd-flash-initramfs'
-CUSTOMER_RECIPES:tegra += 'tos-optee'
-CUSTOMER_RECIPES:tegra += 'cuda-samples'
-CUSTOMER_RECIPES:tegra += 'argus-samples'
-CUSTOMER_RECIPES:tegra += 'l4t-graphics-demos'
-CUSTOMER_RECIPES:tegra += 'nvgstapps'
-CUSTOMER_RECIPES:tegra += 'cudnn-samples'
-CUSTOMER_RECIPES:tegra += 'nvidia-docker'
-CUSTOMER_RECIPES:tegra += 'optee-nvsamples'
-CUSTOMER_RECIPES:tegra += 'optee-test'
-CUSTOMER_RECIPES:tegra += 'optee-client'
-CUSTOMER_RECIPES:tegra += 'nativesdk-packagegroup-cuda-sdk-host'
-CUSTOMER_RECIPES:tegra += 'tegra-firmware'
-CUSTOMER_RECIPES:tegra += 'tegra-minimal-init'
-CUSTOMER_RECIPES:tegra += 'tegra-flash-init'
-CUSTOMER_RECIPES:tegra += 'l4t-launcher-extlinux'
-CUSTOMER_RECIPES:tegra += 'libgcc-for-nvcc'
-CUSTOMER_RECIPES:tegra += 'gcc-for-nvcc-runtime'
-CUSTOMER_RECIPES:tegra += 'tegra-nvfancontrol'
-CUSTOMER_RECIPES:tegra += 'tegra-helper-scripts'
-CUSTOMER_RECIPES:tegra += 'tegra-flashvars'
-CUSTOMER_RECIPES:tegra += 'tegra-binaries'
-CUSTOMER_RECIPES:tegra += 'tegra-eks-image'
-CUSTOMER_RECIPES:tegra += 'tegra-storage-layout'
-CUSTOMER_RECIPES:tegra += 'optee-os'
-CUSTOMER_RECIPES:tegra += 'arm-trusted-firmware'
-CUSTOMER_RECIPES:tegra += 'tar-l4t-workaround-native'
-CUSTOMER_RECIPES:tegra += 'cuda-profiler-api'
-CUSTOMER_RECIPES:tegra += 'cuda-cudart'
-CUSTOMER_RECIPES:tegra += 'cuda-compatibility-workarounds'
-CUSTOMER_RECIPES:tegra += 'cuda-crt'
-CUSTOMER_RECIPES:tegra += 'gcc-for-nvcc-cross-aarch64'
-CUSTOMER_RECIPES:tegra += 'gcc-for-nvcc'
-CUSTOMER_RECIPES:tegra += 'cuda-compiler'
-CUSTOMER_RECIPES:tegra += 'cuda-libraries'
-CUSTOMER_RECIPES:tegra += 'tegra-mmapi'
-CUSTOMER_RECIPES:tegra += 'tegra-cmake-overrides'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-multimedia-utils'
-CUSTOMER_RECIPES:tegra += 'tegra-drm-headers'
-CUSTOMER_RECIPES:tegra += 'cudnn'
-CUSTOMER_RECIPES:tegra += 'standalone-mm-optee-tegra'
-CUSTOMER_RECIPES:tegra += 'optee-os-tadevkit'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-nvdsseimeta'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-multimedia'
-CUSTOMER_RECIPES:tegra += 'libgstnvcustomhelper'
-CUSTOMER_RECIPES:tegra += 'tegra-wifi'
-CUSTOMER_RECIPES:tegra += 'tegra-nvstartup'
-CUSTOMER_RECIPES:tegra += 'tegra-bluetooth'
-CUSTOMER_RECIPES:tegra += 'tegra-nvsciipc'
-CUSTOMER_RECIPES:tegra += 'tegra-nvphs'
-CUSTOMER_RECIPES:tegra += 'tegra-nvs-service'
-CUSTOMER_RECIPES:tegra += 'tegra-configs'
-CUSTOMER_RECIPES:tegra += 'tegra-redundant-boot'
-CUSTOMER_RECIPES:tegra += 'tegra-redundant-boot-base'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-cuda'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvvideosinks'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvvidconv'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvdrmvideosink'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvarguscamerasrc'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvcompositor'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nveglgles'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvipcpipeline'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvjpeg'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvtee'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvunixfd'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvv4l2camerasrc'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-nvvideo4linux2'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-tegra'
-CUSTOMER_RECIPES:tegra += 'gstreamer1.0-plugins-tegra-binaryonly'
-CUSTOMER_RECIPES:tegra += 'tensorrt-trtexec'
-CUSTOMER_RECIPES:tegra += 'tensorrt-samples'
-CUSTOMER_RECIPES:tegra += 'tegra-mmapi-samples'
-CUSTOMER_RECIPES:tegra += 'libcublas'
-CUSTOMER_RECIPES:tegra += 'nv-tegra-release'
-CUSTOMER_RECIPES:tegra += 'tegra-nvpmodel'
-CUSTOMER_RECIPES:tegra += 'nvidia-container-toolkit'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-multimedia-v4l'
-CUSTOMER_RECIPES:tegra += 'gcc-for-nvcc-cross-canadian-aarch64'
-CUSTOMER_RECIPES:tegra += 'libusbgx-tegra-initrd-flash'
-CUSTOMER_RECIPES:tegra += 'tegra-flash-reboot'
-CUSTOMER_RECIPES:tegra += 'cuda-cuobjdump'
-CUSTOMER_RECIPES:tegra += 'cuda-nvcc'
-CUSTOMER_RECIPES:tegra += 'tegra-storage-layout-base'
-CUSTOMER_RECIPES:tegra += 'tegra-nvpower'
-CUSTOMER_RECIPES:tegra += 'tegra-nvpmodel-base'
-CUSTOMER_RECIPES:tegra += 'tegra-eks-image-base'
-CUSTOMER_RECIPES:tegra += 'tegra-configs-alsa'
-CUSTOMER_RECIPES:tegra += 'cuda-cccl'
-CUSTOMER_RECIPES:tegra += 'cuda-cuxxfilt'
-CUSTOMER_RECIPES:tegra += 'cuda-driver'
-CUSTOMER_RECIPES:tegra += 'cuda-nvcc-headers'
-CUSTOMER_RECIPES:tegra += 'cuda-nvprune'
-CUSTOMER_RECIPES:tegra += 'cuda-nvvm'
-CUSTOMER_RECIPES:tegra += 'libnvjitlink'
-CUSTOMER_RECIPES:tegra += 'libnvvpi3'
-CUSTOMER_RECIPES:tegra += 'libcusolver'
-CUSTOMER_RECIPES:tegra += 'libcurand'
-CUSTOMER_RECIPES:tegra += 'libcudla'
-CUSTOMER_RECIPES:tegra += 'libcufft'
-CUSTOMER_RECIPES:tegra += 'libcusparse'
-CUSTOMER_RECIPES:tegra += 'libcufile'
-CUSTOMER_RECIPES:tegra += 'cuda-nvml'
-CUSTOMER_RECIPES:tegra += 'cuda-nvrtc'
-CUSTOMER_RECIPES:tegra += 'cuda-target-environment'
-CUSTOMER_RECIPES:tegra += 'libnpp'
-CUSTOMER_RECIPES:tegra += 'l4t-nvidia-glheaders'
-CUSTOMER_RECIPES:tegra += 'l4t-graphics-demos'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-glescore'
-CUSTOMER_RECIPES:tegra += 'tegra-argus-daemon'
-CUSTOMER_RECIPES:tegra += 'tegra-eeprom-tool'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-camera'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-core'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-dla-compiler'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-eglcore'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-gbm-backend'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-glxcore'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-multimedia-ds'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-nvml'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-nvsci'
-CUSTOMER_RECIPES:tegra += 'tegra-libraries-pva'
-CUSTOMER_RECIPES:tegra += 'egl-wayland'
-CUSTOMER_RECIPES:tegra += 'nvidia-drm-loadconf'
-CUSTOMER_RECIPES:tegra += 'egl-gbm'
-CUSTOMER_RECIPES:tegra += 'tegra-nvs-base'
-CUSTOMER_RECIPES:tegra += 'tegra-nvsciipc-base'
-CUSTOMER_RECIPES:tegra += 'tegra-nvphs-base'
-CUSTOMER_RECIPES:tegra += 'tegra-cuda-utils'
-CUSTOMER_RECIPES:tegra += 'tegra-container-passthrough'
-CUSTOMER_RECIPES:tegra += 'libnvidia-container'
-CUSTOMER_RECIPES:tegra += 'xserver-xorg-video-nvidia'
-CUSTOMER_RECIPES:tegra += 'nativesdk-cuda-environment'
-CUSTOMER_RECIPES:tegra += 'tegra-nv-boot-control-config'
-CUSTOMER_RECIPES:tegra += 'setup-nv-boot-control'
-CUSTOMER_RECIPES:tegra += 'tensorrt-plugins'
-CUSTOMER_RECIPES:tegra += 'tensorrt-core'
-CUSTOMER_RECIPES:tegra += 'eglexternalplatform'
-CUSTOMER_RECIPES:tegra += 'cupva'
-CUSTOMER_RECIPES:tegra += 'gcc-source-for-nvcc-10.3.0'
-CUSTOMER_RECIPES:tegra += 'libnvfatbin'
-CUSTOMER_RECIPES:tegra += 'l4t-launcher-rootfs-ab-config'
-
-CUSTOMER_RECIPES:tegra-community += 'gstreamer-tests'
-CUSTOMER_RECIPES:tegra-community += 'tegra-mmapi-tests'
-CUSTOMER_RECIPES:tegra-community += 'vpi3-tests'
-CUSTOMER_RECIPES:tegra-community += 'tensorrt-tests'
-CUSTOMER_RECIPES:tegra-community += 'deepstream-tests'
-CUSTOMER_RECIPES:tegra-community += 'python3-jetson-stats'
-CUSTOMER_RECIPES:tegra-community += 'nvidia-docker-tests'
-CUSTOMER_RECIPES:tegra-community += 'vpi3-samples'
-CUSTOMER_RECIPES:tegra-community += 'deepstream-7.1-pyds'
-CUSTOMER_RECIPES:tegra-community += 'deepstream-7.1'
-CUSTOMER_RECIPES:tegra-community += 'python3-cuda'
-CUSTOMER_RECIPES:tegra-community += 'openssl111'
-CUSTOMER_RECIPES:tegra-community += 'yaml-cpp-070'
-CUSTOMER_RECIPES:tegra-community += 'python3-pyclibrary'
-
-4.4 Build project
------------------
+4.1.3 Build project
+-------------------
 
 Build project with below command:
 
 	bitbake wrlinux-image-std-sato
 
-After building project completely, there is a compressed package as below:
-<project path>/build/tmp/deploy/images/<MACHINE>/wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash.tar.zst
-It will be used to NVIDIA Orin platform in later.
+After building project completely, system booting images are in <project path>/build/tmp/deploy/images/<MACHINE>.
+User needs to boot these images from network, please refer to detailed steps in section 6.2.
 
+4.2 Full feautre BSP
+--------------------
+
+If users want to enable NVIDIA specific feature like CUDA, deepstream, tensorRT and so on, it needs to add
+additional packages into Yocto project. But because these packages are under the NVIDIA Proprietary license,
+they are not able to be integrated into WRLinux product by default. Based on this reason, users need to build
+NVIDIA BSP with network enabled environment so that these NVIDIA Proprietary packages are able to be downloaded
+during building project. About the detailed building steps, please refer to section 1 in README.proprietary.
+
+Note: If users want to integrate NVIDIA Proprietary package into their own product,
+      they MUST consult NVIDIA and their own legal department.
 
 5. Deploy Instructions
 ======================
@@ -358,21 +176,11 @@ It will be used to NVIDIA Orin platform in later.
 
 Assume that the host system is Ubuntu.
 
-For NVIDIA Orin AGX board:
 Get the high quality USB Type-C cable shipped with NVIDIA Orin development kit, connect the
 USB Type-C end to J40 of NVIDIA Orin AGX board, connect another end to PC host.
 
-For NVIDIA Orin Nano board:
-<1>. Get the high quality USB Type-C cable shipped with NVIDIA Orin development kit, connect the
-     USB Type-C end to J5 of NVIDIA Orin Nano board, connect another end to PC host.
-
-<2>. Install a NVMe card into J11 of NVIDIA Orin Nano board for NVMe boot mode.
-     Install a SD card into SD slot of NVIDIA Orin Nano board for SD boot mode.
-
 5.3 Force Board into Recovery Mode
 ----------------------------------
-
-For NVIDIA Orin AGX board:
 
 <1> Power off NVIDIA Orin AGX board by turning off power supply
 
@@ -394,30 +202,8 @@ For NVIDIA Orin AGX board:
 Note: user also can refer to below link with graphics introduction.
       https://developer.nvidia.com/embedded/learn/jetson-agx-orin-devkit-user-guide/howto.html#force-recovery-mode
 
-For NVIDIA Orin Nano board:
-
-<1> Power off NVIDIA Orin Nano board by turning off power supply.
-
-<2> Connect pins 9 and 10 of Button Header(J14).
-
-<3> Power on NVIDIA Orin Nano board.
-
-<4> Run below command on host to check whether NVIDIA Orin Nano board enters into recovery mode successfully.
-
-    # lsusb
-    ......
-	Bus 001 Device 092: ID 0955:7523 NVIDIA Corp. APX
-    ......
-
-    If the host PC detect above device, it indicates that NVIDIA Orin Nano board enters into recovery mode successfully.
-
-Note: user also can refer to below link with graphics introduction.
-      https://developer.nvidia.com/embedded/learn/jetson-orin-nano-devkit-user-guide/howto.html#force-recovery-mode
-
 5.4 Burn images into NVIDIA Orin board
 --------------------------------------
-
-For NVIDIA Orin AGX board:
 
     Burn images into eMMC with below commands:
 
@@ -434,80 +220,6 @@ For NVIDIA Orin AGX board:
     [ 269.0330 ] Coldbooting the device
     [ 269.0334 ] tegrarcm_v2 --chip 0x23 0 --reboot coldboot
     [ 269.0338 ] MB2 version 01.00.0000
-
-For NVIDIA Orin Nano board:
-
-    There are 2 kinds of storage device that are able to be used to deploy image on Nano board.
-
-<1> NVME Card
-
-    Burn images into NVME with below commands:
-
-    # cd nvidia-deploy
-    # sudo ./initrd-flash
-
-    ......
-    Final status: SUCCESS
-    Successfully finished at 2025-09-23T12:46:50+08:00
-    Host-side log:              log.initrd-flash.2025-09-23-12.21.27
-    Device-side logs stored in: device-logs-2025-09-23-12.21.27
-
-    Note: Burning time is about 20 minutes, if burning action failed, please repeat the steps in section 5.3 and 5.4.
-
-<2> SD Card
-
-<2.1> Burn images into SD card with USB cable
-
-    Force board into recovery mode and then follow below commands:
-
-    # cd nvidia-deploy
-    # sudo ./doflash.sh
-
-    After burning completely, there will be output as below:
-
-    ......
-    [ 269.0302 ] Flashing completed
-    [ 269.0302 ] Coldbooting the device
-    [ 269.0307 ] tegrarcm_v2 --chip 0x23 0 --ismb2
-    [ 269.0312 ] MB2 version 01.00.0000
-    [ 269.0330 ] Coldbooting the device
-    [ 269.0334 ] tegrarcm_v2 --chip 0x23 0 --reboot coldboot
-    [ 269.0338 ] MB2 version 01.00.0000
-
-<2.2> Burn images into SD card from PC Host
-
-      <2.2.1> Burn bootloader into qspi flash with USB cable
-
-              Force board into recovery mode and then follow below commands:
-
-              # cd nvidia-deploy
-              # sudo ./doflash.sh --spi-only
-
-      <2.2.2> Create Nano SD image file with below commands
-
-              # cd nvidia-deploy
-              # sudo ./dosdcard.sh <nano-sd-image>.img
-
-      <2.2.3> Burn Nano SD image into SD card with below commands
-
-              Install SD card into USB SD reader, and connect with PC Host.
-
-              # cd nvidia-deploy
-              # sudo dd if=<nano-sd-image>.img of=/dev/sd<X> conv=fsync bs=200M status=progress
-
-              Note1: X is the device name of current USB SD reader, please carefully determine it.
-                     Otherwise, using the wrong device name could destroy PC host's filesystems.
-              Note2: SD card size is at least 64GB.
-              Note3: SD boot feature generates SD image for 64GB SD card by default. If user wants to
-                     use other size SD card. There are 2 below variables needing to be set correspondingly
-                     in local.conf, especially the SD card size is smaller than 64GB.
-                     TEGRAFLASH_SDCARD_SIZE = "<SD image size>"
-                     ROOTFSPART_SIZE_DEFAULT = "<rootfs size>"
-                     About the TEGRAFLASH_SDCARD_SIZE variable, because SD card reserved space for wearing leveling,
-                     bad block management, controller firmware, error correction, redundancy data and so on. The usable
-                     space can't reach size declared on the packaging. Therefore, user needs to consider this limitation,
-                     and reduce the size of SD image to make sure it is able to be deployed into most of SD cards.
-                     For example, if user uses a 64GB SD card, it recommends that TEGRAFLASH_SDCARD_SIZE is set as 63G.
 
 
 6. Boot Instructions
@@ -553,14 +265,8 @@ For NVIDIA Orin Nano board:
 Precondition 1: In order to boot from network environment, there must be a common DHCP server and setup
                 tftp server and nfs server on their host PC.
 
-Precondition 2: For NVIDIA Orin AGX platform, Orin AGX 64GB-DRAM core module(P3701-0005)+Orin AGX reference carrier board(P3737-0000).
-                Because on NVIDIA Orin AGX platform(p3737-0000+p3701-0005), the UEFI firmware is not able to detect the on-board ethernet
+Precondition 2: Because on NVIDIA Orin AGX platform(p3737-0000+p3701-0005), the UEFI firmware is not able to detect the on-board ethernet
                 card, it needs to attach an USB-to-Ethernet converter to board.
-
-                For NVIDIA Orin Nano platform, Orin Nano 8GB-DRAM core module(P3767-0005)+OrinNano reference carrier board(P3768-0000).
-                Although UEFI firmware of NVIDIA Orin Nano platform(P3768-0000+P3767-0005) supports on-board ethernet card, the ethernet
-                driver is built as kernel module because of needing to load firmware. Therefore, it still needs to attach an USB-to-Ethernet
-                converter to board.
 
 6.2.1 Boot from tftp server
 ---------------------------
@@ -646,17 +352,10 @@ Precondition 2: For NVIDIA Orin AGX platform, Orin AGX 64GB-DRAM core module(P37
 
    After downloading images from tftp server, boot system with below command:
 
-   For NVIDIA Orin AGX platform:
    FS3:\> Image mminit_loglevel=4 console=ttyTCU0,115200 console=ttyAMA0,115200 firmware_class.path=/etc/firmware \
             fbcon=map:0 nospectre_bhb video=efifb:off console=tty0 root=/dev/nfs rw \
             nfsroot=<nfs server ip>:<nfs root path>,v3,tcp ip=dhcp bl_prof_dataptr=2031616@0x102C610000 \
             bl_prof_ro_ptr=65536@0x102C600000 dtb=./tegra234-p3737-0000+p3701-0005-nv-bootable.dtb
-
-   For NVIDIA Orin Nano board:
-   FS3:\> Image mminit_loglevel=4 console=ttyTCU0,115200 console=ttyAMA0,115200 firmware_class.path=/etc/firmware \
-            fbcon=map:0 nospectre_bhb video=efifb:off console=tty0 root=/dev/nfs rw \
-            nfsroot=<nfs server ip>:<nfs root path>,v3,tcp ip=dhcp bl_prof_dataptr=2031616@0x271E10000 \
-            bl_prof_ro_ptr=65536@0x271E00000 dtb=./tegra234-p3768-0000+p3767-0005-nv-super-bootable.dtb
 
 Note: KERNEL_DEVICETREE variable is defined in machine configuration file.
 
@@ -664,7 +363,7 @@ Note: KERNEL_DEVICETREE variable is defined in machine configuration file.
 --------------------------
 
 About PXE boot mode, there is detailed descriptions on NVIDIA official documents, please refer to below link:
-https://docs.nvidia.com/jetson/archives/r36.4.3/DeveloperGuide/SD/FlashingSupport.html#configuring-a-pxe-boot-server-for-uefi-bootloader-on-jetson
+https://docs.nvidia.com/jetson/archives/r36.5/DeveloperGuide/SD/FlashingSupport.html#configuring-a-pxe-boot-server-for-uefi-bootloader-on-jetson
 https://elinux.org/Jetson/L4T/peripheral/#PXE_boot
 
 
@@ -739,8 +438,6 @@ VDD_GPU_SOC 5187mW/5187mW                   GPU SOC current power consumption is
 
 <1> Orin series module power mode
 
-For NVIDIA Orin AGX board:
-
 The Orin AGX module supports four different power modes known as 15W, 30W, and 50W.
 For each mode, several configurations with various CPU and GPU frequencies, and a number of cores online are enabled.
 Detailed configuration Orin AGX 64GB module as below:
@@ -762,46 +459,16 @@ Memory Max frequency (MHz)         3200            2133            3200         
 The default mode is id 2, and Power Budget is 30W.
 The EDP represents the upper limitation of Orin AGX module, so it has no power budget.
 
-For NVIDIA Orin Nano board:
-
-The Orin Nano module supports four different power modes known as 15W, 25W, and MAXN_SUPER.
-For each mode, several configurations with various CPU and GPU frequencies, and a number of cores online are enabled.
-Detailed configuration Orin Nano 8GB module as below:
-
-Mode ID                            0               1               2
-Power Budget                       15W             25W             MAXN_SUPER
-Online CPU                         6               6               6
-CPU Max Frequency (MHz)            1497.6          1344            1728
-GPU TPC	                           4               4               4
-GPU Max Frequency (MHz)            612             918             1020
-DLA cores                          0               0               0
-DLA Core Max Frequency (MHz)       n/a             n/a             n/a
-DLA Falcon Max frequency (MHz)     n/a             n/a             n/a
-PVA Cores                          0               0               0
-PVA VPS Max frequency (MHz)        n/a             n/a             n/a
-PVA AXI Max frequency (MHz)        n/a             n/a             n/a
-Memory Max frequency (MHz)         2133            3199            3199
-
-The default mode is id 1, and Power Budget is 25W.
-The MAXN_SUPER represents the upper limitation of Orin Nano module, so it has no power budget.
-
 <2> Check current power mode
 
 If users want to check the current power mode, please run below command:
 
-For NVIDIA Orin AGX board:
 root@<MACHINE>:~# /usr/sbin/nvpmodel -q
 NV Power Mode: MODE_30W
 2
 
-For NVIDIA Orin Nano board:
-root@<MACHINE>:~# /usr/sbin/nvpmodel -q
-NV Power Mode: 25W
-1
-
 <2> Change power mode
 
-For NVIDIA Orin AGX board:
 If users want to change mode of Orin AGX module, please run below command:
 For example, change into mode 0.
 
@@ -813,12 +480,6 @@ yes
 NVPM WARN: rebooting..
 
 Note: The mode persists across power cycles and won't change unless nvpmodel is called again.
-
-For NVIDIA Orin Nano board:
-If users want to change mode of Orin Nano module, please run below command:
-For example, change into mode 2.
-
-root@<MACHINE>:~# /usr/sbin/nvpmodel -m 2
 
 7.1.3 Manage CPU State
 ----------------------
@@ -858,8 +519,6 @@ psci: CPU2 killed (polled 0 ms)
 
 root@<MACHINE>:~# cat /sys/devices/system/cpu/cpu1/cpufreq/cpuinfo_min_freq
 115200
-root@<MACHINE>:~# cat /sys/devices/system/cpu/cpu1/cpufreq/cpuinfo_max_freq
-2201600(Orin AGX)	1728000(Orin Nano)
 root@<MACHINE>:~# cat /sys/devices/system/cpu/cpu1/cpufreq/cpuinfo_cur_freq
 729600
 
@@ -868,8 +527,6 @@ root@<MACHINE>:~# cat /sys/devices/system/cpu/cpu1/cpufreq/cpuinfo_cur_freq
 root@<MACHINE>:~# cat /sys/devices/system/cpu/cpu1/cpufreq/scaling_available_frequencies
 115200 192000 268800 345600 422400 499200 576000 652800 729600 806400 883200 960000 1036800 1113600 1190400 1267200 1344000
 1420800 1497600 1574400 1651200 1728000 1804800 1881600 1958400 2035200 2112000 2188800 2201600
-
-Note: Only Orin AGX has the available frequencies more than 1728000
 
 <3> To change the CPU upper boundary with below commands:
 
@@ -908,14 +565,12 @@ root@<MACHINE>:~# cat /sys/devices/platform/bus@0/17000000.gpu/devfreq/17000000.
 root@<MACHINE>:~# cat /sys/devices/platform/bus@0/17000000.gpu/devfreq/17000000.gpu/cur_freq
 306000000
 root@<MACHINE>:~# cat /sys/devices/platform/bus@0/17000000.gpu/devfreq/17000000.gpu/max_freq
-1300500000(Orin AGX)	1020000000(Orin Nano)
+1300500000
 
 <2> Get the available frequencies with below commands:
 
 root@<MACHINE>:~# cat /sys/devices/platform/bus@0/17000000.gpu/devfreq/17000000.gpu/available_frequencies
 306000000 408000000 510000000 612000000 714000000 816000000 918000000 1020000000 1122000000 1224000000 1300500000
-
-Note: Only Orin AGX has the available frequencies more than 1020000000
 
 <3> To change the GPU upper boundary with below commands:
 
@@ -1106,18 +761,6 @@ root@<MACHINE>:~# export DISPLAY=:0
 root@<MACHINE>:~# gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, \
                                        format=(string)NV12, framerate=(fraction)30/1' ! nvvidconv ! nvegltransform ! queue ! nveglglessink -e
 
-For NVIDIA Orin Nano platform:
-The Arducam IMX219 visible light fixed focus camera module is supported, link as below:
-https://www.arducam.com/b0191-arducam-imx219-visible-light-fixed-focus-camera-module-nvidia-jetson-nano-raspberry-pi-compute-module.html
-
-<1> Connect Arducam IMX219 camera module with J20 of NVIDIA Orin nano platform
-
-<2> Run below command to start camera preview
-
-root@<MACHINE>:~# export DISPLAY=:0
-root@<MACHINE>:~# gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, \
-                                       format=(string)NV12, framerate=(fraction)30/1' ! nvvidconv ! nvegltransform ! queue ! nveglglessink -e
-
 7.5.2 Video decode
 ------------------
 
@@ -1131,43 +774,22 @@ root@<MACHINE>:~# gst-launch-1.0 filesrc location=<filename.mp4> ! decodebin nam
 <1> Capture data from camera and encode with below command:
 
 Only record data:
-For NVIDIA Orin AGX board:
 root@<MACHINE>:~# gst-launch-1.0 nvarguscamerasrc ! \
                                        'video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, \
                                        format=(string)NV12, framerate=(fraction)30/1' ! nvvidconv ! \
                                        'video/x-raw(memory:NVMM), format=I420' ! nvv4l2h264enc ! \
                                        h264parse ! qtmux ! filesink location=output.mp4 -e
 
-For NVIDIA Orin Nano board:
-root@<MACHINE>:~# gst-launch-1.0 nvarguscamerasrc ! \
-                                       'video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, \
-                                       framerate=30/1, format=NV12' ! nvvidconv ! \
-                                       x264enc tune=zerolatency speed-preset=ultrafast ! \
-                                       h264parse ! mp4mux ! filesink location=output.mp4 -e
-
 Record data and preview:
-For NVIDIA Orin AGX board:
 root@<MACHINE>:~# gst-launch-1.0 nvarguscamerasrc ! tee name=t ! \
                                        'video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, \
                                        format=(string)NV12, framerate=(fraction)30/1' ! queue ! nvvideoconvert ! nvegltransform ! nveglglessink t. ! queue ! nvvidconv ! \
                                        'video/x-raw(memory:NVMM), format=I420' ! nvv4l2h264enc ! \
                                        h264parse ! qtmux ! filesink location=output.mp4 -e
 
-For NVIDIA Orin Nano board:
-root@<MACHINE>:~# gst-launch-1.0 -e nvarguscamerasrc ! \
-                                       "video/x-raw(memory:NVMM), width=1920, height=1080, framerate=30/1, format=NV12" ! \
-                                       nvvidconv ! "video/x-raw, format=I420" ! \
-                                       tee name=t ! queue leaky=1 ! nv3dsink t. ! \
-                                       queue ! x264enc tune=zerolatency speed-preset=ultrafast ! \
-                                       h264parse ! mp4mux ! filesink location=output.mp4
-
 <2> Play the recorded video clip with below command:
 
-For NVIDIA Orin AGX board:
 root@<MACHINE>:~# gst-launch-1.0 filesrc location=./output.mp4 ! decodebin name=dec ! nvvidconv ! nvegltransform ! nveglglessink
-
-For NVIDIA Orin Nano board:
-root@<MACHINE>:~# gst-launch-1.0 filesrc location=output.mp4 ! qtdemux ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
 
 7.5.4 Audio decode
 ------------------
@@ -1312,8 +934,9 @@ root@<MACHINE>:~# export DISPLAY=:0
 Allow external applications to connect to the host's X display
 root@<MACHINE>:~# xhost +
 
-root@<MACHINE>:~# docker run -it --rm --network=host --runtime nvidia -e DISPLAY=$DISPLAY -w /opt/nvidia/deepstream/deepstream-7.1 \
-                                   -v /tmp/.X11-unix/:/tmp/.X11-unix nvcr.io/nvidia/deepstream-l4t:7.1-triton-multiarch
+root@<MACHINE>:~# docker run -it --rm --network=host --runtime nvidia -e DISPLAY=$DISPLAY -e AARCH64_IGPU=1 \
+                             -w /opt/nvidia/deepstream/deepstream-7.1 -v /tmp/.X11-unix/:/tmp/.X11-unix \
+                             nvcr.io/nvidia/deepstream-l4t:7.1-triton-multiarch
 
 <6> Run DeepStream demo in container
 
@@ -1334,7 +957,6 @@ NVIDIA Orin platform supports CAN bus, but it needs external transceiver to impl
 NVIDIA recommends the WaveShare SN65HVD230 CAN transceiver module for NVIDIA Orin platform, link as below:
 https://www.amazon.com/SN65HVD230-CAN-Board-Communication-Development/dp/B00KM6XMXO
 
-For NVIDIA Orin AGX platform:
 There are 2 CAN ports in the 40-pin header(J30), so it needs 2 transceivers to connect the 2 CAN ports.
 Detailed connection layout as below:
 
@@ -1354,27 +976,6 @@ Detailed connection layout as below:
 |        (pin09 of J30) |       |               |         |               |       | (pin06 of J30)       |
 |                       |       |               |         |               |       |                      |
 ------------------------        -----------------         -----------------       -----------------------
-
-For NVIDIA Orin Nano platform:
-There is only one CAN port in the 4-pin header(J17), so it needs 2 Orin Nano board and transceivers to connect the 2 CAN ports.
-Detailed connection layout as below:
-
-    CAN0 port(Nano 1)           transceiver(Nano1)          transceiver(Nano 2)         CAN0 port(Nano 2)
-------------------------        -----------------           -----------------        ------------------------
-|                       |       |                |          |                |       |                      |
-|              CAN0_TX  |<------| TXD            |          |            TXD |------>| CAN0_TX              |
-|        (pin01 of J17) |       |          CAN H |<-------->| CAN H          |       | (pin01 of J17)       |
-|                       |       |                |          |                |       |                      |
-|              CAN0_RX  |------>| RXD            |          |            RXD |<------| CAN0_RX              |
-|        (pin02 of J17) |       |                |          |                |       | (pin02 of J17)       |
-|                       |       |                |          |                |       |                      |
-|                   GND |------>| GND            |          |            GND |<------| GND                  |
-|        (pin03 of J17) |       |          CAN L |<-------->| CAN L          |       | (pin03 of J17)       |
-|                       |       |                |          |                |       |                      |
-|                   3V3 |------>| 3V3            |          |            3V3 |<------| 3V3                  |
-|        (pin04 of J17) |       |                |          |                |       | (pin04 of J17)       |
-|                       |       |                |          |                |       |                      |
-------------------------        ------------------          ------------------        -----------------------
 
 7.8.2 CAN bus data communication
 --------------------------------
@@ -1404,11 +1005,10 @@ root@<MACHINE>:~# modprobe mttcan
 <3> Setup can0 and can1 with below command:
 root@<MACHINE>:~# ip link set can0 up type can bitrate 500000 dbitrate 1000000 berr-reporting on fd on
 root@<MACHINE>:~# ip link set can1 up type can bitrate 500000 dbitrate 1000000 berr-reporting on fd on
-root@<MACHINE>nano:~# ifconfig
+root@<MACHINE>:~# ifconfig
 
 <4> Data communication
 
-For NVIDIA Orin AGX platform:
 Data send(can1) and receive(can0)
 
 Dump data with can0
@@ -1423,26 +1023,9 @@ root@<MACHINE>:~# cansend can1 123##1abcdabcd
 Use cangen tool to generate CAN frame
 root@<MACHINE>:~# cangen can1
 
-For NVIDIA Orin Nano platform:
-Data send(Nano 1) and receive(Nano 2)
-
-Dump data with can0 of Nano 1
-root@<MACHINE>:~# candump can0
-
-Send a frame to can0 of Nano 2 with CAN ID 123 and data "abcdabcd"
-root@<MACHINE>:~# cansend can0 123#abcdabcd
-
-Send a FD frame to can0 of Nano 2 with CAN ID 123, flag bit 1, and data "abcdabcd"
-root@<MACHINE>:~# cansend can0 123##1abcdabcd
-
-Use cangen tool to generate CAN frame
-root@<MACHINE>:~# cangen can0
-
 <5> Check data sending and receiving on can0 and can1 with below command:
 root@<MACHINE>:~# ip -details -statistics link show can0
 root@<MACHINE>:~# ip -details -statistics link show can1
-
-Note: It only needs to set CAN0 for Orin Nano platform.
 
 7.9 WIFI/BT
 -----------
@@ -1495,22 +1078,13 @@ root@<MACHINE>:~# l2ping -c 5 <BT MAC address>
 7.10.1 USB Host
 ---------------
 
-For NVIDIA Orin AGX platform:
 There are 4 USB Type-A ports(J33) on NVIDIA Orin AGX board, they all work in USB host mode.
-Users can connect USB disk, mouse, keyboard and other USB device to any of them.
-
-For NVIDIA Orin Nano platform:
-There are 2 USB Type A Dual Stacked ports(J6 and J7) on NVIDIA Orin Nano board, they all work in USB host mode.
 Users can connect USB disk, mouse, keyboard and other USB device to any of them.
 
 7.10.2 USB OTG
 --------------
 
-For NVIDIA Orin AGX platform:
 There is one USB Type-C port(J40) on NVIDIA Orin AGX board, it works in USB otg mode.
-
-For NVIDIA Orin Nano platform:
-There is one USB Type-C port(J5) on NVIDIA Orin Nano board, it works in USB otg mode.
 
 <1> Work as USB host mode
 
@@ -1532,12 +1106,7 @@ Note: Set a reasonable number for 'X' to use expected USB partition.
 7.11 microSD card
 -----------------
 
-For NVIDIA Orin AGX platform:
 There is a microSD card slot(J10) on the NVIDIA Orin AGX board.
-When user insert a microSD card into slot, it will be detected, detailed output as below:
-
-For NVIDIA Orin Nano platform:
-There is a microSD card slot on the NVIDIA Orin Nano core module(P3767-0005).
 When user insert a microSD card into slot, it will be detected, detailed output as below:
 
 root@<MACHINE>:~#
@@ -1613,18 +1182,13 @@ Run below command to validate the OP-TEE feature with highest level 15
 
 [1] https://developer.nvidia.com/embedded/learn/get-started-jetson-agx-orin-devkit
 [2] https://developer.nvidia.com/embedded/learn/jetson-agx-orin-devkit-user-guide/index.html
-[3] https://docs.nvidia.com/jetson/archives/r36.4.3/DeveloperGuide/index.html
+[3] https://docs.nvidia.com/jetson/archives/r36.5/DeveloperGuide/index.html
 [4] https://developer.nvidia.com/embedded/jetpack
-[5] https://developer.nvidia.com/embedded/jetson-linux-r3643
+[5] https://developer.nvidia.com/embedded/jetson-linux-r365
 [6] https://developer.nvidia.com/downloads/jetson-agx-orin-developer-kit-carrier-board-design-files
 [7] https://developer.nvidia.com/embedded/secure/jetson/agx_orin/jetson_agx_orin_pinmux_config_template.xlsm
 [8] NVIDIA Jetson AGX Orin Series Modules
 [9] NVIDIA Jetson AGX Orin Developer Kit Carrier Board
-[10] https://developer.nvidia.com/embedded/learn/get-started-jetson-orin-nano-devkit
-[11] https://developer.nvidia.com/embedded/learn/jetson-orin-nano-devkit-user-guide/hardware_spec.html
-[12] https://developer.nvidia.com/downloads/assets/embedded/secure/jetson/orin_nano/docs/jetson_orin_nano_devkit_carrier_board_specification_sp.pdf
-[13] https://developer.nvidia.com/downloads/jetson-orin-nx-and-orin-nano-series-pinmux-config-template
-[14] https://developer.nvidia.com/downloads/assets/embedded/secure/jetson/orin_nano/docs/jetson_orin_nano_ds
 
 
 9. Known Issues

@@ -17,16 +17,12 @@ This BSP supports the following boards:
 
    + Nvidia Jetson AGX Orin developer kit: Jetson AGX Orin 64GB module (P3701-0005) +
 					   Jetson AGX Orin reference carrier board (P3737-0000)
-   + Nvidia Jetson Orin Nano developer kit: Jetson Orin Nano 8GB-DRAM module (P3767-0005) +
-					   Jetson Orin Nano reference carrier board (P3768-0000)
 
 
 2. Change History
 =================
-  - 2025/09 (LINUXPG-2676): Wind River Linux 10.25 RCPL01. Standard and Preempt-rt based on
-			    NVIDIA Jetpack 6.2, Jetson Linux 36.4.3 and OpenEmbedded for Tegra.
-  - 2025/11 (LINUXPG-2761): Wind River Linux 10.25 RCPL03. Standard and Preempt-rt based on
-			    NVIDIA Jetpack 6.2, Jetson Linux 36.4.3 and OpenEmbedded for Tegra.
+  - 2026/07 (LINUXPG-2932): Wind River Linux 10.26 RCPL01. Standard and Preempt-rt based on
+			    NVIDIA Jetpack 6.2.2, Jetson Linux 36.5.0 and OpenEmbedded for Tegra.
 
 
 3. BSP Features
@@ -43,36 +39,34 @@ the corresponding h/w features exist.
 	+ GPU: Up to NVIDIA Ampere architecture with 2048 NVIDIA CUDA cores and 64 Tensor Cores, up to 1.3 GHz
 
   o Engine
-	+ Deep Learning Accelerator: 2x NVDLA v2.0, up to 1.6 GHz (Only for Orin AGX)
+	+ Deep Learning Accelerator: 2x NVDLA v2.0, up to 1.6 GHz
 	+ Vision Accelerator: PVA v2.0 (Only for Orin AGX)
-	+ Video Encoder: H.264, H.265 (HEVC), AV1 (Only for Orin AGX)
+	+ Video Encoder: H.264, H.265 (HEVC), AV1
 	+ Video Decoder: H.264, H.265 (HEVC), VP8, VP9, VC1, AV1, MPEG2, MPEG4
-	+ JPEG Codec: Color space conversion, Single image and batched image decoding (Only for Orin AGX)
+	+ JPEG Codec: Color space conversion, Single image and batched image decoding
 
   o Memory
-	+ 64GB 256-bit LPDDR5 204.8 GB/s (Only for Orin AGX)
-	+ 8GB 128-bit LPDDR5 68 GB/s or 102 GB/s (MAXN_SUPER) (Only for Orin Nano)
+	+ 64GB 256-bit LPDDR5 204.8 GB/s
 
   o Bus
-	+ 9 x I2C (Orin AGX), 4 x I2C (Orin Nano)
-	+ 8 x I2S (Orin AGX), 2 x I2S (Orin Nano)
-	+ 2 x CAN (Orin AGX), 1 x CAN (Orin Nano)
-	+ 4 x UART (Orin AGX), 3 x UART (Orin Nano)
-	+ 3 x SPI (Orin AGX), 2 x SPI (Orin Nano)
-	+ 4 x USB 2.0(Orin AGX), 3x USB 2.0 (Orin Nano)
+	+ 9 x I2C
+	+ 8 x I2S
+	+ 2 x CAN
+	+ 4 x UART
+	+ 3 x SPI
+	+ 4 x USB 2.0
 	+ 3 x USB 3.2 Gen2
-	+ 1 x PCIe: Standard PCIe x16, Lower x8 used for PCIe (Upper x8 reserved) (Only for Orin AGX)
-	+ 2 x SD and eMMC Controller: supporting eMMC 5.1, SD 4.0, SDHOST 4.0 and SDIO 3.0 (Orin AGX)
-	+ 1 x SD and eMMC Controller: supporting eMMC 5.1, SD 4.0, SDHOST 4.0 and SDIO 3.0 (Orin Nano)
-	
+	+ 1 x PCIe: Standard PCIe x16, Lower x8 used for PCIe (Upper x8 reserved)
+	+ 2 x SD and eMMC Controller: supporting eMMC 5.1, SD 4.0, SDHOST 4.0 and SDIO 3.0
+
   o Network
-	+ Ethernet: Up to 10GBASE-T (Orin AGX), up to 1000BASE-T (Orin Nano)
+	+ Ethernet: Up to 10GBASE-T
 	+ Wireless: AW-CB375NF Dual-Band Wireless NIC
 				2.4G/5GHz Dual-Band WiFi 5, RTL8822CE-CG Core
 				Bluetooth 5.0, Supports BLE
 
   o Storage
-	+ eMMC (Only for Orin AGX)
+	+ eMMC
 	+ NVMe card
 	+ SD card
 	+ USB host
@@ -81,8 +75,7 @@ the corresponding h/w features exist.
   o Multimedia
 	+ USB Camera
 	+ CSI Camera:
-		Orin AGX: 16 lanes (6, x2 or 4, x4) DPHY or CPHY
-		Orin Nano: 4-lane (1, x2 or x4 and 1, x2) DPHY
+		16 lanes (6, x2 or 4, x4) DPHY or CPHY
 	+ Display Port: Version DP v1.4a
                     Supports MST and DSC
                     Supports resolution Up to 8K60
@@ -130,18 +123,4 @@ eMMC, if used in a different environment it may run into unknown issues.
 	Processor:		Nvidia Jetson Orin AGX
 	Board:			Nvidia Jetson Orin AGX Developer kit
 	BootLoader:		Jetson UEFI firmware
-	BootLoader Version:	36.4.3
-
-4.1.2 Orin Nano platform
-------------------------
-
-NOTE: This BSP is only validated in the following environment with booting from
-NVMe card, if used in a different environment it may run into unknown issues.
-
-4.1.2.1 Validated Board Info
-----------------------------
-
-	Processor:		Nvidia Jetson Orin Nano
-	Board:			Nvidia Jetson Orin Nano Developer kit
-	BootLoader:		Jetson UEFI firmware
-	BootLoader Version:	36.4.3
+	BootLoader Version:	36.5.0
