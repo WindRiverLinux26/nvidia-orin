@@ -32,6 +32,7 @@
    7.12 NVME card
    7.13 PCIe
    7.14 OP-TEE
+   7.15 System Redundancy
 8. References
 9. Known Issues
    9.1 dm-verity Limitation
@@ -1175,6 +1176,149 @@ Run below command to validate the OP-TEE feature with highest level 15
 	137 test cases of which 0 failed
 	0 test cases were skipped
 	TEE test application done!
+
+7.15 System Redundancy
+----------------------
+
+NVIDIA Orin platform supports A/B redundant boot, the system maintains two copies (slots) of bootloader
+firmware and the root filesystem, allowing automatic rollback if one of 2 slots boots up failed.
+
+7.15.1 A/B Slot Layout
+----------------------
+
+The NVIDIA Orin platform uses a shadow copy mechanism to enable redundant boot. Each firmware component in
+the boot chain is stored in two copies, commonly referred to as Slot A and Slot B. At boot time, the Boot ROM
+and subsequent boot stages select the correct slot based on runtime state, ensuring the system boots from a
+known-good copy. The one exception is the BR-BCT (Boot ROM Boot Configuration Table), which exists as a single
+instance at a fixed storage location. The BR-BCT serves as the root entry for the Boot ROM and contains pointers
+to both Slot A and Slot B, enabling the A/B selection for all subsequent components.
+
+This two-slot implementation is as follows:
+
+	┌──────────────────────┐  ┌──────────────────────┐
+	│      Slot A (0)      │  │      Slot B (1)      │
+	├──────────────────────┤  ├──────────────────────┤
+	│  A_mb1               │  │  B_mb1               │
+	├──────────────────────┤  ├──────────────────────┤
+	│  ......              │  │  ......              │
+	├──────────────────────┤  ├──────────────────────┤
+	│  A_mb2               │  │  B_mb2               │
+	├──────────────────────┤  ├──────────────────────┤
+	│  ......              │  │  ......              │
+	├──────────────────────┤  ├──────────────────────┤
+	│  A_cpu-bootloader    │  │  B_cpu-bootloader    │
+	├──────────────────────┤  ├──────────────────────┤
+	│  ......              │  │  ......              │
+	├──────────────────────┤  ├──────────────────────┤
+	├──────────────────────┤  ├──────────────────────┤
+	│  A_kernel            │  │  B_kernel            │
+	├──────────────────────┤  ├──────────────────────┤
+	│  A_kernel-dtb        │  │  B_kernel-dtb        │
+	├──────────────────────┤  ├──────────────────────┤
+	│  APP (rootfs A)      │  │  APP_b (rootfs B)    │
+	└──────────────────────┘  └──────────────────────┘
+
+7.15.2 Boot Control
+-------------------
+
+nvbootctrl is the userspace CLI tool for managing A/B redundant boot slots on the NVIDIA Orin platform.
+It can be used to dump the slot information, set the active slot and so on. Detailed information as below:
+
+	root@<MACHINE>:~# nvbootctrl
+	nvbootctrl - command-line wrapper for the boot_control HAL.
+
+	Usage:
+	  nvbootctrl [Options] Command
+
+	Options:
+	  -t <target>                    - target available: bootloader or rootfs. Default: bootloader.
+
+	Commands:
+	  get-number-slots               - Prints number of slots.
+	  get-current-slot               - Prints currently running SLOT.
+	  set-active-boot-slot SLOT      - On next boot, load and execute SLOT.
+	  dump-slots-info                - Prints info for slots.
+	  verify                         - Verify the bootloader and rootfs boot.
+	  verify-bl                      - Verify the bootloader boot only.
+	  is-rootfs-ab-enabled           - Rootfs only. Return 0 if rootfs A/B is disabled;
+	                                 - Return 1 if rootfs A/B is enabled, current slot is A;
+	                                 - Return 2 if rootfs A/B is enabled, current slot is B;
+
+	SLOT parameter is the zero-based slot-number.
+
+Note: When running nvbootctrl command with is-rootfs-ab-enabled to check whether rootfs A/B is enabled,
+      it needs to echo the return value explicitly as below, because nvbootctrl doesn't show any information
+      in shell terminal windows.
+      root@<MACHINE>:~# nvbootctrl -t rootfs is-rootfs-ab-enabled; echo $?
+
+<1>. Switch Boot Slot
+
+Run below command to check current running slot.
+
+	root@<MACHINE>:~# nvbootctrl get-current-slot
+    0
+
+Run below command to set active slot for next boot, and then reboot.
+
+	root@<MACHINE>:~# nvbootctrl set-active-boot-slot 1
+	root@<MACHINE>:~# reboot
+
+During system restarts, some log information as below can indicate system boots up from slot 1.
+
+	[0000.068] I> MB1 (version: 1.4.0.7-t234-54845784-56c609fa)
+	......
+	[0000.327] I> Loading MEMBCT
+	[0000.329] I> Slot: 1
+	......
+	[0001.854] I> Loading MB2
+	[0001.856] I> Slot: 1
+	......
+	I> MB2 (version: 0.0.0.0-t234-54845784-6ee03b4e)
+	......
+	I> Partition name: B_spe-fw
+	......
+
+After system boots up completely, check current running slot with below command.
+
+	root@<MACHINE>:~# nvbootctrl get-current-slot
+    1
+
+After system boots up completely, check current mounted rootfs with below command.
+
+	root@<MACHINE>:~# blkid
+	......
+	/dev/mmcblk0p2: UUID="a98903c5-2813-4daf-b44b-0bd3a1b03bfe" BLOCK_SIZE="4096" TYPE="ext4" PARTLABEL="APP_b" PARTUUID="69351178-fb29-46c1-aac5-e50f3a492752"
+	......
+	/dev/mmcblk0p1: UUID="a98903c5-2813-4daf-b44b-0bd3a1b03bfe" BLOCK_SIZE="4096" TYPE="ext4" PARTLABEL="APP" PARTUUID="09600655-fc34-4684-9fe1-462fc8d8177c"
+	......
+
+	root@<MACHINE>:~# mount
+	......
+	/dev/mmcblk0p2 on / type ext4 (rw,relatime)
+
+<2>. Failover Boot
+
+Run below command to makw sure system boots up from slot 0
+
+	root@<MACHINE>:~# nvbootctrl get-current-slot
+	0
+
+Destrory B_kernel and APP_b partitons with below command
+
+	root@<MACHINE>:~# dd if=/dev/zero of=/dev/disk/by-partlabel/B_kernel bs=1M count=100
+	root@<MACHINE>:~# dd if=/dev/zero of=/dev/disk/by-partlabel/APP_b bs=1M count=100
+
+Run below command to select slot 1 for next boot, and restart system
+	root@<MACHINE>:~# nvbootctrl set-active-boot-slot 1
+	root@<MACHINE>:~# reboot
+
+Because B_kernel and APP_b partitons are corrupted, system boots up failed, bootloader will try 3 times,
+and then switch to slot 0 to boot system normally.
+
+After system boots up normally, check the boot slot with below command
+
+	root@<MACHINE>:~# nvbootctrl get-current-slot
+	0
 
 
 8. References
