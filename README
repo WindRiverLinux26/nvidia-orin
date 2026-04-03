@@ -33,6 +33,7 @@
    7.13 PCIe
    7.14 OP-TEE
    7.15 System Redundancy
+   7.16 System Update
 8. References
 9. Known Issues
    9.1 dm-verity Limitation
@@ -1319,6 +1320,169 @@ After system boots up normally, check the boot slot with below command
 
 	root@<MACHINE>:~# nvbootctrl get-current-slot
 	0
+
+7.16 System Update
+------------------
+
+The NVIDIA Orin platforms support a comprehensive system update framework based on the A/B redundancy architecture.
+The system maintains two complete sets of boot partitions(Slot A and Slot B), allowing safe updates to the inactive
+slot while the active slot continues running.
+
+Take NVIDIA Orin AGX platform as an example, in order to update the full system, user needs to follow the instructions
+in the next three chapters step by step.
+
+7.16.1 Update kernel image and dtb
+----------------------------------
+
+In general, the UEFI L4T Launcher boots up system with extlinux.conf, which specifies the kernel path on the rootfs.
+In this section, the kernel image to be updated is located in raw kernel(A_kernel/B_kernel) partitions. It is used as
+fallback if the one on rootfs are corrupted. Detailed update steps as below:
+
+<1>. Get kernel image and dtb
+
+	User can get the kernel image and dtb in <project-path>/build/tmp/build/tmp/deploy/images/nvidia-orin-agx/
+	kernel image: tegra-minimal-initramfs-nvidia-orin-agx.cboot
+	dtb: devicetree/tegra234-p3737-0000+p3701-0005-nv.dtb
+
+<2>. Copy kernel image and dtb to target platform
+
+	Example command as below:
+
+	root@<MACHINE>:~# scp <user name>@<host ip>:<host path>/tegra234-p3737-0000+p3701-0005-nv.dtb /root
+	root@<MACHINE>:~# scp <user name>@<host ip>:<host path>/tegra-minimal-initramfs-nvidia-orin-agx.cboot /root
+	root@<MACHINE>:~# sync
+
+<3>. Burn kernel image and dtb
+
+	If system boots up from slot 0, user can burn B_kernel and B_kernel-dtb with below commands:
+
+	root@<MACHINE>:~# dd if=/root/tegra-minimal-initramfs-nvidia-orin-agx.cboot of=/dev/disk/by-partlabel/B_kernel bs=4M
+	root@<MACHINE>:~# dd if=/root/tegra234-p3737-0000+p3701-0005-nv.dtb of=/dev/disk/by-partlabel/B_kernel-dtb bs=4M
+	root@<MACHINE>:~# sync
+
+<4>. Verify kernel image and dtb
+
+	It recommends that verify the fallback kernel image and dtb after rootfs is also updated, because kernel modules
+	need to match with reasonable kernel version.
+
+	After burning kernel image and dtb, switch slot 1 as the booting slot for next time.
+	root@<MACHINE>:~# nvbootctrl set-active-boot-slot 1
+	root@<MACHINE>:~# reboot
+
+	After system boots up from slot 1, remove kernel image and boot configuration file from rootfs. Only in this way,
+	the fallback kernel image and dtb will be used in next boot.
+	root@<MACHINE>:~# cd /boot
+	root@<MACHINE>:~# mv Image Image-6.18.20-yocto-standard extlinux/extlinux.conf /root
+	root@<MACHINE>:~# sync
+	root@<MACHINE>:~# reboot
+
+	During system boots up from slot 1 again, check whether fallback kernel and dtb are loaded with boot log.
+	After system boots up from slot 1 again, check the kernel version and dtb specific node to make sure that
+	the fallback kernel and dtb are loaded normally.
+	root@<MACHINE>:~# cat /proc/version
+	root@<MACHINE>:~# cd /proc/device-tree
+	root@<MACHINE>:~# ls -laR
+
+	Restore kernel image and boot configuration so that system boots up with primary configuration.
+	root@<MACHINE>:~# cd /root
+	root@<MACHINE>:~# mv Image Image-6.18.20-yocto-standard /boot
+	root@<MACHINE>:~# mv extlinux.conf /boot/extlinux
+	root@<MACHINE>:~# sync
+
+	Switch slot 0 as the booting slot for next time.
+	root@<MACHINE>:~# nvbootctrl set-active-boot-slot 0
+	root@<MACHINE>:~# reboot
+
+7.16.2 Update rootfs
+--------------------
+
+There are 2 partitions(APP and APP_b) used to store rootfs. Detailed steps as below:
+
+<1>. Get rootfs
+
+	After building project, the rootfs image is located at
+	<project-path>/build/tmp/deploy/images/nvidia-orin-agx/wrlinux-image-std-sato-nvidia-orin-agx.ext4
+
+<2>. Copy rootfs to target platform
+
+	Example command as below:
+
+	root@<MACHINE>:~# scp <user name>@<host ip>:<host path>/wrlinux-image-std-sato-nvidia-orin-agx.rootfs.ext4 /tmp
+
+<3>. Burn rootfs image
+
+	If system boots up from slot 0, user can burn APP_b with below commands:
+
+	root@<MACHINE>:~# dd if=/tmp/wrlinux-image-std-sato-nvidia-orin-agx.rootfs.ext4 of=/dev/disk/by-partlabel/APP_b bs=4M status=progress conv=fsync
+
+<4>. Verify rootfs
+
+	After burning rootfs, switch slot 1 as the booting slot for next time.
+
+	root@<MACHINE>:~# nvbootctrl set-active-boot-slot 1
+	root@<MACHINE>:~# reboot
+
+	After system boots up from slot 1 again, check the specific content.
+
+7.16.3 Update bootloader
+------------------------
+
+For NVIDIA Orin platform, bootloader image includes MB1, MB2, UEFI, BPMP, OP-TEE, and other co-processor firmware stored on QSPI NOR flash.
+It is updated with UEFI Capsule update mechanism that maintains two sets of bootloader partitions on the QSPI NOR flash. The bootloader
+capsule file(tegra-bl.cap) is generated by tegra-uefi-capsules recipe. In order to update bootloader, The capsule file should be placed
+on the ESP partition under EFI/UpdateCapsule/ directory, and then use OsIndications EFI variable to trigger UEFI to process the capsule
+file on the next boot. This is the only method available for QSPI firmware updates, as the QSPI flash is protected by a hardware firewall
+and is not accessible from the Linux kernel.
+
+If system boots up from slot 0, detailed update steps as below:
+
+<1>. Deploy bootloader capsule file to ESP partition
+
+	root@<MACHINE>:~# mkdir -p /boot/efi/EFI/UpdateCapsule
+	root@<MACHINE>:~# cp /opt/nvidia/UpdateCapsule/tegra-bl.cap /boot/efi/EFI/UpdateCapsule/
+	root@<MACHINE>:~# sync
+
+<2>. Trigger UEFI to process the capsule file
+
+	Set OsIndications EFI variable
+
+	Option1:
+	root@<MACHINE>:~# cd /sys/firmware/efi/efivars/
+	root@<MACHINE>:~# printf "\x07\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00" > /tmp/var_tmp.bin
+	root@<MACHINE>:~# dd if=/tmp/var_tmp.bin of=OsIndications-8be4df61-93ca-11d2-aa0d-00e098032b8c bs=12;sync
+
+	Option2:
+	root@<MACHINE>:~# oe4t-set-uefi-OSIndications
+
+	Restart system
+
+	root@<MACHINE>:~# reboot
+
+<3>. Verify bootloader update
+
+	During system boots up, UEFI will update firmware images into QSPI flash, and then switch to slot 1 automatically.
+	After a successful capsule update, the nv_update_verifier service runs nvbootctrl verify command to check the capsule update
+	status, confirm the new firmware boots up successfully and mark boots slot as good. If the new firmware fails to boot, UEFI
+	will roll back to the previous slot automatically.
+	The capsule update status can be checked with below command:
+
+	root@<MACHINE>:~# nvbootctrl get-current-slot
+	1
+
+	root@<MACHINE>:~# nvbootctrl dump-slots-info
+	Current version: 36.5.0
+	Capsule update status: 1
+	Current bootloader slot: B
+	Active bootloader slot: B
+	num_slots: 2
+	slot: 0,             status: normal
+	slot: 1,             status: normal
+
+	About Capsule update status, detailed meaning as below:
+	0: No capsule update performed
+	1: Capsule update successful - firmware updated and booted from new slot
+	2: Capsule installed successfully but boot from new firmware failed - rolled back to previous slot
+	3: Capsule installation failed - firmware was not written
 
 
 8. References
