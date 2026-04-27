@@ -16,6 +16,3 @@ require ${@'recipes-kernel/linux/tegra-kernel.inc' if 'tegra' in d.getVar('MACHI
 
 # All of our device trees are out-of-tree
 KERNEL_DEVICETREE:forcevariable = ""
-
-SRCREV_machine:nvidia-orin = "${AUTOREV}"
-SRCREV_meta:nvidia-orin = "${AUTOREV}"
