@@ -114,7 +114,7 @@ by running 'bitbake -e virtual/kernel | grep "^TARGET_SUPPORTED_KTYPES="'.
 To get a list of patches applied to the kernel specific to this BSP along with
 patch descriptions use git-whatchanged on the default kernel. For example:
 
-  $ cd tmp-glibc/work-shared/<bsp_name>/kernel-source
+  $ cd tmp/work-shared/<bsp_name>/kernel-source
   $ git whatchanged v6.18/standard/base..v6.18/standard/nvidia-soc
 
 
