@@ -875,10 +875,17 @@ streams at the same time, and show them with Multiview style on the screen.
 Run DeepStream Application-3 with below commands:
 
 root@<MACHINE>:~# export DISPLAY=:0
-root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test3
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test3# \
-                          deepstream-test3-app file:///opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_1080p_h264.mp4 \
-                          file:///opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_720p.mp4
+root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5# \
+                          cp configs/test5_config_file_src_infer.txt configs/test5_config_file_src_infer_2src_h264.txt
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5# \
+                          sed -i \
+                            -e 's/^rows=2/rows=1/' \
+                            -e '/^\[source/,/^$/{ s/^type=3/type=2/; s|sample_1080p_h264.mp4|sample_720p.h264|; /^num-sources=/d; }' \
+                            -e '/^\[sink1\]/,/^$/{s/^enable=1/enable=0/;}' \
+                            configs/test5_config_file_src_infer_2src_h264.txt
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5# \
+                          deepstream-test5-app -c configs/test5_config_file_src_infer_2src_h264.txt -p 1
 
 Note: All the above DeepStream demonstrations need DP or HDMI monitor as output end, so please connect a kind of monitor before
       starting your NVIDIA Orin platform.
