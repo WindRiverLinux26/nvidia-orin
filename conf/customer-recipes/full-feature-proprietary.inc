@@ -5,6 +5,9 @@
 # Using them requires accepting the corresponding license agreements.
 #
 
+# openembedded-layer
+CUSTOMER_RECIPES:openembedded-layer += 'faad2'
+
 # tegra: proprietary or mixed (containing Proprietary) licensed packages
 CUSTOMER_RECIPES:tegra += 'cuda-cccl'
 CUSTOMER_RECIPES:tegra += 'cuda-crt'
