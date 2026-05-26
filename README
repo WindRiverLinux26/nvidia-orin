@@ -168,9 +168,9 @@ Note: If users want to integrate NVIDIA Proprietary package into their own produ
 	Create deploying environment with below commands:
 
 	$ mkdir nvidia-deploy
-	$ cp <build output path>/wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash.tar.zst nvidia-deploy
+	$ cp <build output path>/wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash-tar.zst nvidia-deploy
 	$ cd nvidia-deploy
-	$ sudo tar --zstd -xvf wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash.tar.zst
+	$ sudo tar --zstd -xvf wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash-tar.zst
 	$ sudo ./l4t_flash_prerequisites.sh
 
 5.2 Connect NVIDIA Orin Board with Host

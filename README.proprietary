@@ -32,5 +32,5 @@ Build project with below command:
 	bitbake wrlinux-image-std-sato
 
 After building project completely, there is a compressed package as below:
-<project path>/build/tmp/deploy/images/<MACHINE>/wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash.tar.zst
+<project path>/build/tmp/deploy/images/<MACHINE>/wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash-tar.zst
 It will be used to NVIDIA Orin platform in later.
