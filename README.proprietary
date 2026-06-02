@@ -4,7 +4,7 @@
 1.1 Setup BSP project
 ---------------------
 
-	--machine nvidia-orin-agx --distro wrlinux-graphics --dl-layers --all-layers --accept-eula=yes
+	--machine nvidia-orin-agx --distro wrlinux-graphics --dl-layers --accept-eula=yes
 
 1.2 Setup environment and create a build directory
 --------------------------------------------------
