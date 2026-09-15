@@ -3,8 +3,6 @@
 DEFAULTTUNE ?= "armv8a-crc"
 require ${@bb.utils.contains('BUILD_NVIDIA_PROPRIETARY_PACKAGE', '1', \
 			     '', 'conf/machine/include/arm/arch-armv8-2a.inc', d)}
-require ${@bb.utils.contains('BUILD_NVIDIA_PROPRIETARY_PACKAGE', '1', \
-			     'conf/machine/include/devkit-wifi.inc', '', d)}
 
 MACHINE_FEATURES ??= "alsa usbhost pci rtc ext2"
 
