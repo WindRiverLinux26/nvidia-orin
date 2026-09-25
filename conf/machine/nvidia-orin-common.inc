@@ -3,10 +3,8 @@
 DEFAULTTUNE ?= "armv8a-crc"
 require ${@bb.utils.contains('BUILD_NVIDIA_PROPRIETARY_PACKAGE', '1', \
 			     '', 'conf/machine/include/arm/arch-armv8-2a.inc', d)}
-require ${@bb.utils.contains('BUILD_NVIDIA_PROPRIETARY_PACKAGE', '1', \
-			     'conf/machine/include/devkit-wifi.inc', '', d)}
 
-MACHINE_FEATURES ??= "alsa usbhost pci rtc ext2"
+MACHINE_FEATURES ??= "alsa usbhost pci rtc ext2 wifi bluetooth"
 
 KERNEL_IMAGETYPE ?= "Image"
 
@@ -16,9 +14,11 @@ PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
 PREFERRED_VERSION_linux-yocto ?= "6.18%"
 PREFERRED_VERSION_linux-yocto-rt ?= "6.18%"
 
-MACHINE_EXTRA_RRECOMMENDS:append = " kernel-modules"
+MACHINE_EXTRA_RRECOMMENDS:append = " kernel-modules linux-firmware-rtl8822 kernel-module-rtw88-8822ce kernel-module-rtk-btusb kernel-module-snd-soc-rl6231 kernel-module-snd-soc-rt5640"
+IMAGE_CLASSES += "image_types_tegra"
 IMAGE_FSTYPES += "tar.bz2 ext4"
 IMAGE_INSTALL:append = " kernel-image-image"
+IMAGE_FSTYPES:remove = "wic.zst"
 
 MACHINEOVERRIDES:append = ":nvidia-orin"
 
