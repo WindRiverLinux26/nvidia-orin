@@ -18,7 +18,6 @@ MACHINE_EXTRA_RRECOMMENDS:append = " kernel-modules linux-firmware-rtl8822 kerne
 IMAGE_CLASSES += "image_types_tegra"
 IMAGE_FSTYPES += "tar.bz2 ext4"
 IMAGE_INSTALL:append = " kernel-image-image"
-IMAGE_FSTYPES:remove = "wic.zst"
 
 MACHINEOVERRIDES:append = ":nvidia-orin"
 
