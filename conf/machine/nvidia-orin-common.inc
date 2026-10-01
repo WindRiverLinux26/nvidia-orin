@@ -15,7 +15,6 @@ PREFERRED_VERSION_linux-yocto ?= "6.18%"
 PREFERRED_VERSION_linux-yocto-rt ?= "6.18%"
 
 MACHINE_EXTRA_RRECOMMENDS:append = " kernel-modules linux-firmware-rtl8822 kernel-module-rtw88-8822ce kernel-module-rtk-btusb kernel-module-snd-soc-rl6231 kernel-module-snd-soc-rt5640"
-IMAGE_CLASSES += "image_types_tegra"
 IMAGE_FSTYPES += "tar.bz2 ext4"
 IMAGE_INSTALL:append = " kernel-image-image"
 
