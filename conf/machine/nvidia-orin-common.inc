@@ -14,7 +14,9 @@ PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
 PREFERRED_VERSION_linux-yocto ?= "6.18%"
 PREFERRED_VERSION_linux-yocto-rt ?= "6.18%"
 
-MACHINE_EXTRA_RRECOMMENDS:append = " kernel-modules linux-firmware-rtl8822 kernel-module-rtw88-8822ce kernel-module-rtk-btusb kernel-module-snd-soc-rl6231 kernel-module-snd-soc-rt5640"
+MACHINE_EXTRA_RRECOMMENDS:append = " kernel-modules linux-firmware-rtl8822 kernel-module-rtw88-8822ce \
+	${@bb.utils.contains('BUILD_NVIDIA_PROPRIETARY_PACKAGE', '1', 'tegra-firmware-rtl8822', '', d)} \
+	kernel-module-rtk-btusb kernel-module-snd-soc-rl6231 kernel-module-snd-soc-rt5640"
 IMAGE_FSTYPES += "tar.bz2 ext4"
 IMAGE_INSTALL:append = " kernel-image-image"
 
