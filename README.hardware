@@ -21,8 +21,8 @@ This BSP supports the following boards:
 
 2. Change History
 =================
-  - 2026/07 (LINUXPG-2932): Wind River Linux 10.26 RCPL01. Standard and Preempt-rt based on
-			    NVIDIA Jetpack 6.2.2, Jetson Linux 36.5.0 and OpenEmbedded for Tegra.
+  - 2026/10 (LINUXPG-2932): Wind River Linux 10.26 Standard and Preempt-rt based on
+			    NVIDIA Jetpack 7.2.1, Jetson Linux 39.2.1 and OpenEmbedded for Tegra.
 
 
 3. BSP Features
@@ -41,7 +41,6 @@ the corresponding h/w features exist.
   o Engine
 	+ Deep Learning Accelerator: 2x NVDLA v2.0, up to 1.6 GHz
 	+ Vision Accelerator: PVA v2.0 (Only for Orin AGX)
-	+ Video Encoder: H.264, H.265 (HEVC), AV1
 	+ Video Decoder: H.264, H.265 (HEVC), VP8, VP9, VC1, AV1, MPEG2, MPEG4
 	+ JPEG Codec: Color space conversion, Single image and batched image decoding
 
@@ -51,12 +50,10 @@ the corresponding h/w features exist.
   o Bus
 	+ 9 x I2C
 	+ 8 x I2S
-	+ 2 x CAN
 	+ 4 x UART
 	+ 3 x SPI
 	+ 4 x USB 2.0
 	+ 3 x USB 3.2 Gen2
-	+ 1 x PCIe: Standard PCIe x16, Lower x8 used for PCIe (Upper x8 reserved)
 	+ 2 x SD and eMMC Controller: supporting eMMC 5.1, SD 4.0, SDHOST 4.0 and SDIO 3.0
 
   o Network
@@ -70,19 +67,6 @@ the corresponding h/w features exist.
 	+ NVMe card
 	+ SD card
 	+ USB host
-	+ USB otg
-
-  o Multimedia
-	+ USB Camera
-	+ CSI Camera:
-		16 lanes (6, x2 or 4, x4) DPHY or CPHY
-	+ Display Port: Version DP v1.4a
-                    Supports MST and DSC
-                    Supports resolution Up to 8K60
-                    Supports 16 bpp YUV422, 18 bpp RGB, 24 bpp RGB/YUV444,30 bpp RGB/YUV444 and 36 bpp RGB/YUV444 format
-                    Supports 2-8 channel audio streaming up to 96 kHz sample rate
-                    Supports RBR, HBR, HBR2 and HBR3 bit rates
-    + High Definition Audio: Output from Display Port
 
   o Power Mgmt
 	+ CPU hotplug
@@ -104,6 +88,34 @@ The following features are not supported and not validated:
 	x DMIC
 	x DSPK
 
+3.3 Nvidia Supported Features
+=============================
+
+The following features are supported by Nvidia but have not been validated
+by Wind River on this BSP:
+
+  o Engine
+    + Video Encoder: H.264, H.265 (HEVC), AV1
+
+  o Bus
+	+ 2 x CAN
+	+ 1 x PCIe: Standard PCIe x16, Lower x8 used for PCIe (Upper x8 reserved)
+
+  o Storage
+	+ USB otg
+
+  o Multimedia
+	+ USB Camera
+	+ CSI Camera:
+		16 lanes (6, x2 or 4, x4) DPHY or CPHY
+	+ Display Port: Version DP v1.4a
+                    Supports MST and DSC
+                    Supports resolution Up to 8K60
+                    Supports 16 bpp YUV422, 18 bpp RGB, 24 bpp RGB/YUV444,30 bpp RGB/YUV444 and 36 bpp RGB/YUV444 format
+                    Supports 2-8 channel audio streaming up to 96 kHz sample rate
+                    Supports RBR, HBR, HBR2 and HBR3 bit rates
+    + High Definition Audio: Output from Display Port
+
 
 4. BSP Notes
 ============
@@ -122,5 +134,5 @@ eMMC, if used in a different environment it may run into unknown issues.
 
 	Processor:		Nvidia Jetson Orin AGX
 	Board:			Nvidia Jetson Orin AGX Developer kit
-	BootLoader:		Jetson UEFI firmware
-	BootLoader Version:	36.5.0
+	BootLoader:		t23x_general System firmware
+	BootLoader Version:	39.2.1

@@ -7,13 +7,14 @@
 2. BSP Kernel and Distros
 3. Board Specific Patches
 4. Build Instructions
-   4.1 Basic feautre BSP
-   4.2 Full feautre BSP
+   4.1 Basic feature BSP
+   4.2 Full feature BSP
 5. Deploy Instructions
-   5.1 Create Deploying Environment
-   5.2 Connect NVIDIA Orin Board with Host
-   5.3 Force Board into Recovery Mode
-   5.4 Burn images into NVIDIA Orin board
+   5.1 Install Host Prerequisites
+   5.2 Create Deploying Environment
+   5.3 Connect NVIDIA Orin Board with Host
+   5.4 Force Board into Recovery Mode
+   5.5 Burn images into NVIDIA Orin board
 6. Boot Instructions
    6.1 Boot from Storage Device
    6.2 Boot from Network
@@ -111,17 +112,13 @@ by running 'bitbake -e virtual/kernel | grep "^TARGET_SUPPORTED_KTYPES="'.
 3. Board Specific Patches
 =========================
 
-To get a list of patches applied to the kernel specific to this BSP along with
-patch descriptions use git-whatchanged on the default kernel. For example:
-
-  $ cd tmp/work-shared/<bsp_name>/kernel-source
-  $ git whatchanged v6.18/standard/base..v6.18/standard/nvidia-soc
-
+The list of kernel patches specific to this BSP can be found in the nvidia Orin layer under:
+nvidia-orin layer recipes-kernel/linux/tegra-kmeta/features/tegra
 
 4. Build Instructions
 =====================
 
-4.1 Basic feautre BSP
+4.1 Basic feature BSP
 ---------------------
 
 This basic BSP only supports some common devices. For example, network, USB, eMMC and so on.
@@ -147,7 +144,7 @@ Build project with below command:
 After building project completely, system booting images are in <project path>/build/tmp/deploy/images/<MACHINE>.
 User needs to boot these images from network, please refer to detailed steps in section 6.2.
 
-4.2 Full feautre BSP
+4.2 Full feature BSP
 --------------------
 
 If users want to enable NVIDIA specific feature like CUDA, deepstream, tensorRT and so on, it needs to add
@@ -162,7 +159,16 @@ Note: If users want to integrate NVIDIA Proprietary package into their own produ
 5. Deploy Instructions
 ======================
 
-5.1 Create Deploying Environment
+5.1 Install Host Prerequisites
+------------------------------
+
+If image deployment will be performed from the host system, install the packages required by the flash scripts.
+
+  $ sudo apt update
+  $ sudo apt install bash bmap-tools cpp device-tree-compiler gdisk \
+		    libxml2-utils python3 tar udisks2 usbutils zstd
+
+5.2 Create Deploying Environment
 --------------------------------
 
 	Create deploying environment with below commands:
@@ -170,10 +176,9 @@ Note: If users want to integrate NVIDIA Proprietary package into their own produ
 	$ mkdir nvidia-deploy
 	$ cp <build output path>/wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash-tar.zst nvidia-deploy
 	$ cd nvidia-deploy
-	$ sudo tar --zstd -xvf wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash-tar.zst
-	$ sudo ./l4t_flash_prerequisites.sh
+	$ sudo tar -xvf wrlinux-image-std-sato-<MACHINE>.rootfs.tegraflash-tar.zst
 
-5.2 Connect NVIDIA Orin Board with Host
+5.3 Connect NVIDIA Orin Board with Host
 ---------------------------------------
 
 Assume that the host system is Ubuntu.
@@ -181,20 +186,20 @@ Assume that the host system is Ubuntu.
 Get the high quality USB Type-C cable shipped with NVIDIA Orin development kit, connect the
 USB Type-C end to J40 of NVIDIA Orin AGX board, connect another end to PC host.
 
-5.3 Force Board into Recovery Mode
+5.4 Force Board into Recovery Mode
 ----------------------------------
 
-<1> Power off NVIDIA Orin AGX board by turning off power supply
+<1> Power on NVIDIA Orin AGX board by turning on power supply.
 
-<2> Press and hold down the Force Recovery button(S3), and then power on board by turning on power supply.
+<2> Press and hold down the Force Recovery button.
 
-<3> (Optional) If the white LED(DS2) is not lit, press the Power button(S1).
+<3> Press and release RESET.
 
-<4> Release both buttons.
+<4> Release the RECOVERY button.
 
 <5> Run below command on host to check whether NVIDIA Orin AGX board enters into recovery mode successfully.
 
-    # lsusb
+    # lsusb -d 0955:
     ......
     Bus 003 Device 006: ID 0955:7023 NVIDIA Corp. APX
     ......
@@ -203,31 +208,34 @@ USB Type-C end to J40 of NVIDIA Orin AGX board, connect another end to PC host.
 
 Note: user also can refer to below link with graphics introduction.
       https://developer.nvidia.com/embedded/learn/jetson-agx-orin-devkit-user-guide/howto.html#force-recovery-mode
+      https://www.jetson-ai-lab.com/tutorials/yocto-on-jetson/
+      https://docs.nvidia.com/jetson/agx-orin-devkit/user-guide/latest/hardware_layout.html
 
-5.4 Burn images into NVIDIA Orin board
+5.5 Burn images into NVIDIA Orin board
 --------------------------------------
 
     Burn images into eMMC with below commands:
 
     # cd nvidia-deploy
-    # sudo ./doflash.sh
+    # sudo ./initrd-flash
 
     After burning completely, there will be output as below:
 
     ......
-    [ 269.0302 ] Flashing completed
-    [ 269.0302 ] Coldbooting the device
-    [ 269.0307 ] tegrarcm_v2 --chip 0x23 0 --ismb2
-    [ 269.0312 ] MB2 version 01.00.0000
-    [ 269.0330 ] Coldbooting the device
-    [ 269.0334 ] tegrarcm_v2 --chip 0x23 0 --reboot coldboot
-    [ 269.0338 ] MB2 version 01.00.0000
+    Writing wrlinux-image-std-sato.ext4 (size=6758989824) to /dev/sda1 (size=29527900160)...
+    Writing wrlinux-image-std-sato.ext4 (size=6758989824) to /dev/sda2 (size=29527900160)...
+    [OK: /dev/sda]
+    == Step 5: Waiting for final status from device ==
+    Waiting for USB storage device flashpkg from ......[/dev/sda]
+    Unmounted /dev/sda.
+    Final status: SUCCESS
+    Successfully finished at ......
 
 
 6. Boot Instructions
 ====================
 
-6.1 Boot from Storage Sevice
+6.1 Boot from Storage Device
 ----------------------------
 
 6.1.1 Boot from internal eMMC
@@ -259,7 +267,7 @@ Note: user also can refer to below link with graphics introduction.
 4) Login WRLinux system
    <MACHINE> login: root
    root@<MACHINE>:~# uname -a
-   Linux <MACHINE> 6.12.33-yocto-standard #1 SMP PREEMPT Fri Jun 20 01:52:55 UTC 2025 aarch64 GNU/Linux
+   Linux <MACHINE> 6.18.35-yocto-standard #1 SMP PREEMPT Fri Jun 20 01:52:55 UTC 2025 aarch64 GNU/Linux
 
 6.2 Boot from Network
 ---------------------
@@ -290,7 +298,7 @@ Precondition 2: Because on NVIDIA Orin AGX platform(p3737-0000+p3701-0005), the 
 
    Power on board, and then press 'ESC' key continuously to enter setup menu when debug serial port outputs below content.
    **********************************************************************
-   Jetson System firmware version v36.4.3 date 2023-08-09T14:18:37+00:00
+   t23x_general System firmware v39.2.1 date 2026-08-18T12:53:54+00:00
    ESC   to enter Setup.
    F11   to enter Boot Manager Menu.
    Enter to continue boot.
@@ -301,6 +309,11 @@ Precondition 2: Because on NVIDIA Orin AGX platform(p3737-0000+p3701-0005), the 
    UEFI Interactive Shell v2.2
    EDK II
    UEFI v2.70 (EDK II, 0x00010000)
+
+   Note: Some serial terminal programs (for example, minicom) may not navigate all
+   UEFI menu screens correctly - certain submenu items may not respond. If you hit
+   this, use picocom, tio, or screen instead. For example:
+	$ sudo picocom -b 115200 /dev/ttyACM0
 
 4) Download images from tftp server
 
@@ -367,6 +380,7 @@ Note: KERNEL_DEVICETREE variable is defined in machine configuration file.
 About PXE boot mode, there is detailed descriptions on NVIDIA official documents, please refer to below link:
 https://docs.nvidia.com/jetson/archives/r36.5/DeveloperGuide/SD/FlashingSupport.html#configuring-a-pxe-boot-server-for-uefi-bootloader-on-jetson
 https://elinux.org/Jetson/L4T/peripheral/#PXE_boot
+https://docs.nvidia.com/jetson/archives/r39.2/DeveloperGuide/SD/FlashingSupport.html#configuring-a-pxe-boot-server-for-uefi-bootloader-on-jetson
 
 
 7. Features
@@ -543,21 +557,7 @@ root@<MACHINE>:~# echo 192000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min
 root@<MACHINE>:~# echo 1728000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
 root@<MACHINE>:~# echo 1728000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 
-7.1.5 Manage GPU Frequency Scaling
-----------------------------------
-
-3D frequency scaling capability allows the NVIDIA Orin platform to change the GPU frequency according to
-the load in order to reduce power consumption, 3D frequency scaling is enabled by default.
-
-<1> To disable 3D frequency scaling with below command:
-
-root@<MACHINE>:~# echo 0 > /sys/devices/platform/bus@0/17000000.gpu/enable_3d_scaling
-
-<2> To enable 3D frequency scaling run the following command:
-
-root@<MACHINE>:~# echo 1 > /sys/devices/platform/bus@0/17000000.gpu/enable_3d_scaling
-
-7.1.6 Change GPU Frequency
+7.1.5 Change GPU Frequency
 --------------------------
 
 <1> To show the GPU lower boundary, upper boundary, and current frequency with below commands:
@@ -587,7 +587,7 @@ root@<MACHINE>:~# echo 408000000 > /sys/devices/platform/bus@0/17000000.gpu/devf
 root@<MACHINE>:~# echo 1020000000 > /sys/devices/platform/bus@0/17000000.gpu/devfreq/17000000.gpu/min_freq
 root@<MACHINE>:~# echo 1020000000 > /sys/devices/platform/bus@0/17000000.gpu/devfreq/17000000.gpu/max_freq
 
-7.1.7 Change Memory Frequency
+7.1.6 Change Memory Frequency
 -----------------------------
 
 <1> To show the EMC lower boundary, upper boundary, and current frequency with below commands:
@@ -610,7 +610,7 @@ root@<MACHINE>:~# echo 1 > /sys/kernel/debug/bpmp/debug/clk/emc/mrq_rate_locked
 root@<MACHINE>:~# echo 1 > /sys/kernel/debug/bpmp/debug/bwmgr/bwmgr_halt
 root@<MACHINE>:~# echo 2133000000 > /sys/kernel/debug/bpmp/debug/clk/emc/rate
 
-7.1.8 Jetson Clocks Tool
+7.1.7 Jetson Clocks Tool
 ------------------------
 
 NVIDIA provides the jetson_clocks.sh script to maximize Orin module performance by setting static max frequency to CPU, GPU, and EMC clocks.
@@ -643,6 +643,8 @@ root@<MACHINE>:~# jetson_clocks
 <4> To restore the previous settings with below commands:
 
 root@<MACHINE>:~# jetson_clocks --restore
+
+Note: jetson_clocks --restore may report "No such file or directory" errors on Orin. These can be safely ignored during development.
 
 7.2 System Monitoring Tool
 --------------------------
@@ -738,7 +740,9 @@ info:
 7.5.1 Camera Preview
 --------------------
 
-In below link, NIVDIA lists all the camera module partners.
+**STATUS: NVIDIA supported**
+
+In below link, NVIDIA lists all the camera module partners.
 https://marketplace.nvidia.com/en-us/enterprise/robotics-edge/?category=cameras&page=1&limit=15
 
 For NVIDIA Orin AGX platform:
@@ -773,6 +777,8 @@ root@<MACHINE>:~# gst-launch-1.0 filesrc location=<filename.mp4> ! decodebin nam
 7.5.3 Video encode
 ------------------
 
+**STATUS: NVIDIA supported**
+
 <1> Capture data from camera and encode with below command:
 
 Only record data:
@@ -796,9 +802,11 @@ root@<MACHINE>:~# gst-launch-1.0 filesrc location=./output.mp4 ! decodebin name=
 7.5.4 Audio decode
 ------------------
 
+**STATUS: NVIDIA supported**
+
 If users want to verify audio feature of NVIDIA Orin platform, please connect a monitor that supports for sound playback function.
 
-<1> Play audio encoded with ACC from a mp4 file with below command:
+<1> Play audio encoded with AAC from a mp4 file with below command:
 
 root@<MACHINE>:~# gst-launch-1.0 filesrc location=<filename.mp4> ! qtdemux name=demux demux.audio_0 ! queue ! avdec_aac ! audioconvert ! alsasink -e
 
@@ -808,6 +816,8 @@ root@<MACHINE>:~# gst-launch-1.0 filesrc location=<filename.mp3> ! mpegaudiopars
 
 7.5.5 Audio and Video decode
 ----------------------------
+
+**STATUS: NVIDIA supported**
 
 Play audio and video from a mp4 file at the same time with below command:
 
@@ -844,9 +854,9 @@ It is a simple example that uses DeepStream element to detect cars, persons, and
 Run DeepStream Application-1 with below commands:
 
 root@<MACHINE>:~# export DISPLAY=:0
-root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test1
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test1# \
-                          deepstream-test1-app /opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_720p.h264
+root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test1
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test1# \
+                          deepstream-test1-app /opt/nvidia/deepstream/deepstream-9.1/samples/streams/sample_720p.h264
 
 At the first time of running DeepStream application, it needs spend some time to create engine from model files.
 When the DeepStream application starts executing, users can see that there are red color rectangle around the detected objects.
@@ -858,9 +868,9 @@ The second DeepStream application is more powerful than the first one.
 Run DeepStream Application-2 with below commands:
 
 root@<MACHINE>:~# export DISPLAY=:0
-root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test2
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test2# \
-                          deepstream-test2-app /opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_720p.h264
+root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test2
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test2# \
+                          deepstream-test2-app /opt/nvidia/deepstream/deepstream-9.1/samples/streams/sample_720p.h264
 
 At the first time of running DeepStream application, it needs spend some time to create engine from model files.
 When the DeepStream application starts executing, user can see there are also red color rectangle around the detected objects.
@@ -875,16 +885,16 @@ streams at the same time, and show them with Multiview style on the screen.
 Run DeepStream Application-3 with below commands:
 
 root@<MACHINE>:~# export DISPLAY=:0
-root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5# \
+root@<MACHINE>:~# cd /opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test5
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test5# \
                           cp configs/test5_config_file_src_infer.txt configs/test5_config_file_src_infer_2src_h264.txt
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5# \
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test5# \
                           sed -i \
                             -e 's/^rows=2/rows=1/' \
                             -e '/^\[source/,/^$/{ s/^type=3/type=2/; s|sample_1080p_h264.mp4|sample_720p.h264|; /^num-sources=/d; }' \
                             -e '/^\[sink1\]/,/^$/{s/^enable=1/enable=0/;}' \
                             configs/test5_config_file_src_infer_2src_h264.txt
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test5# \
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.1/sources/apps/sample_apps/deepstream-test5# \
                           deepstream-test5-app -c configs/test5_config_file_src_infer_2src_h264.txt -p 1
 
 Note: All the above DeepStream demonstrations need DP or HDMI monitor as output end, so please connect a kind of monitor before
@@ -903,8 +913,10 @@ training or other computationally intensive operations.
 7.7.2 Container Demonstration
 -----------------------------
 
-In WRLinux NVIDIA Orin BSP, nvidia-docker and nvidia-container-toolkit packages are integrated by default.
-User can run NVIDIA official container with belwo steps.
+**STATUS: NVIDIA supported**
+
+In WRLinux NVIDIA Orin BSP, nvidia-container-toolkit packages are integrated by default.
+User can run NVIDIA official container with below steps.
 
 <1> Set correct system time
 
@@ -931,7 +943,8 @@ root@<MACHINE>:~# systemctl status docker
 
 <4> Pull NVIDIA container
 
-root@<MACHINE>:~# docker pull nvcr.io/nvidia/deepstream-l4t:7.1-triton-multiarch
+root@<MACHINE>:~# docker pull nvcr.io/nvidia/deepstream-l4t:9.0-samples-multiarch
+
 
 Users also can pull other containers from below link:
 https://catalog.ngc.nvidia.com/orgs/nvidia/containers/deepstream-l4t
@@ -944,20 +957,22 @@ Allow external applications to connect to the host's X display
 root@<MACHINE>:~# xhost +
 
 root@<MACHINE>:~# docker run -it --rm --network=host --runtime nvidia -e DISPLAY=$DISPLAY -e AARCH64_IGPU=1 \
-                             -w /opt/nvidia/deepstream/deepstream-7.1 -v /tmp/.X11-unix/:/tmp/.X11-unix \
-                             nvcr.io/nvidia/deepstream-l4t:7.1-triton-multiarch
+                             -w /opt/nvidia/deepstream/deepstream-9.0 -v /tmp/.X11-unix/:/tmp/.X11-unix \
+                             nvcr.io/nvidia/deepstream-l4t:9.0-samples-multiarch
 
 <6> Run DeepStream demo in container
 
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1# \
-                        cd /opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test1
-root@<MACHINE>:/opt/nvidia/deepstream/deepstream-7.1/sources/apps/sample_apps/deepstream-test1# deepstream-test1-app \
-                        /opt/nvidia/deepstream/deepstream-7.1/samples/streams/sample_720p.h264
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.0# \
+                        cd /opt/nvidia/deepstream/deepstream-9.0/sources/apps/sample_apps/deepstream-test1
+root@<MACHINE>:/opt/nvidia/deepstream/deepstream-9.0/sources/apps/sample_apps/deepstream-test1# deepstream-test1-app \
+                        /opt/nvidia/deepstream/deepstream-9.0/samples/streams/sample_720p.h264
 
 Note: NFS is not able to serve as the backing filesystem, so users need to deploy WRLinux system on eMMC/NVMe card if they want to run container image.
 
 7.8 CAN bus
 -----------
+
+**STATUS: NVIDIA supported**
 
 7.8.1 CAN bus connection layout
 -------------------------------
@@ -1058,7 +1073,7 @@ root@<MACHINE>:~# dhcpcd wlP1p1s0
 Connect to encrypted network with below command:
 root@<MACHINE>:~# ifconfig wlP1p1s0 up
 root@<MACHINE>:~# iw wlP1p1s0 scan
-root@<MACHINE>:~# wpa_passphrase <AP SSID> <AP oassword> > /etc/wpa_supplicant.conf
+root@<MACHINE>:~# wpa_passphrase <AP SSID> <AP password> > /etc/wpa_supplicant.conf
 root@<MACHINE>:~# wpa_supplicant -B -i wlP1p1s0 -c /etc/wpa_supplicant.conf
 root@<MACHINE>:~# iw dev wlP1p1s0 link
 root@<MACHINE>:~# dhcpcd wlP1p1s0
@@ -1092,6 +1107,8 @@ Users can connect USB disk, mouse, keyboard and other USB device to any of them.
 
 7.10.2 USB OTG
 --------------
+
+**STATUS: NVIDIA supported**
 
 There is one USB Type-C port(J40) on NVIDIA Orin AGX board, it works in USB otg mode.
 
@@ -1139,6 +1156,8 @@ When users insert a NVME card into one of slots, it will be detected after syste
 7.13 PCIe
 ---------
 
+**STATUS: NVIDIA supported**
+
 There is a PCIe x16 connector(J6) on the NVIDIA Orin AGX board.
 
 User can verify PCIe feature with below steps:
@@ -1171,8 +1190,8 @@ Note: There is no PCIe interface on Orin Nano board.
 Currently, OP-TEE feature is supported by default. When users build BSP project referring to section 4,
 the optee-os(BL32 image) is built automatically, and can be deployed into system referring to section 5.
 
-7.14.2 OP-TEE Verificaton
--------------------------
+7.14.2 OP-TEE Verification
+--------------------------
 
 Run below command to validate the OP-TEE feature with highest level 15
 
@@ -1306,12 +1325,12 @@ After system boots up completely, check current mounted rootfs with below comman
 
 <2>. Failover Boot
 
-Run below command to makw sure system boots up from slot 0
+Run below command to make sure system boots up from slot 0
 
 	root@<MACHINE>:~# nvbootctrl get-current-slot
 	0
 
-Destrory B_kernel and APP_b partitons with below command
+Destroy B_kernel and APP_b partitions with below command
 
 	root@<MACHINE>:~# dd if=/dev/zero of=/dev/disk/by-partlabel/B_kernel bs=1M count=100
 	root@<MACHINE>:~# dd if=/dev/zero of=/dev/disk/by-partlabel/APP_b bs=1M count=100
@@ -1320,7 +1339,7 @@ Run below command to select slot 1 for next boot, and restart system
 	root@<MACHINE>:~# nvbootctrl set-active-boot-slot 1
 	root@<MACHINE>:~# reboot
 
-Because B_kernel and APP_b partitons are corrupted, system boots up failed, bootloader will try 3 times,
+Because B_kernel and APP_b partitions are corrupted, system boots up failed, bootloader will try 3 times,
 and then switch to slot 0 to boot system normally.
 
 After system boots up normally, check the boot slot with below command
@@ -1379,7 +1398,7 @@ fallback if the one on rootfs are corrupted. Detailed update steps as below:
 	After system boots up from slot 1, remove kernel image and boot configuration file from rootfs. Only in this way,
 	the fallback kernel image and dtb will be used in next boot.
 	root@<MACHINE>:~# cd /boot
-	root@<MACHINE>:~# mv Image Image-6.18.20-yocto-standard extlinux/extlinux.conf /root
+	root@<MACHINE>:~# mv Image Image-6.18.35-yocto-standard extlinux/extlinux.conf /root
 	root@<MACHINE>:~# sync
 	root@<MACHINE>:~# reboot
 
@@ -1392,7 +1411,7 @@ fallback if the one on rootfs are corrupted. Detailed update steps as below:
 
 	Restore kernel image and boot configuration so that system boots up with primary configuration.
 	root@<MACHINE>:~# cd /root
-	root@<MACHINE>:~# mv Image Image-6.18.20-yocto-standard /boot
+	root@<MACHINE>:~# mv Image Image-6.18.35-yocto-standard /boot
 	root@<MACHINE>:~# mv extlinux.conf /boot/extlinux
 	root@<MACHINE>:~# sync
 
@@ -1477,7 +1496,7 @@ If system boots up from slot 0, detailed update steps as below:
 	1
 
 	root@<MACHINE>:~# nvbootctrl dump-slots-info
-	Current version: 36.5.0
+	Current version: 39.2.1
 	Capsule update status: 1
 	Current bootloader slot: B
 	Active bootloader slot: B
@@ -1497,13 +1516,15 @@ If system boots up from slot 0, detailed update steps as below:
 
 [1] https://developer.nvidia.com/embedded/learn/get-started-jetson-agx-orin-devkit
 [2] https://developer.nvidia.com/embedded/learn/jetson-agx-orin-devkit-user-guide/index.html
-[3] https://docs.nvidia.com/jetson/archives/r36.5/DeveloperGuide/index.html
-[4] https://developer.nvidia.com/embedded/jetpack
-[5] https://developer.nvidia.com/embedded/jetson-linux-r365
-[6] https://developer.nvidia.com/downloads/jetson-agx-orin-developer-kit-carrier-board-design-files
-[7] https://developer.nvidia.com/embedded/secure/jetson/agx_orin/jetson_agx_orin_pinmux_config_template.xlsm
-[8] NVIDIA Jetson AGX Orin Series Modules
-[9] NVIDIA Jetson AGX Orin Developer Kit Carrier Board
+[3] https://www.jetson-ai-lab.com/tutorials/yocto-on-jetson/
+[4] https://docs.nvidia.com/jetson/archives/r39.2/DeveloperGuide/index.html
+[5] https://developer.nvidia.com/embedded/jetpack
+[6] https://developer.nvidia.com/embedded/jetpack/downloads
+[7] https://developer.nvidia.com/embedded/jetpack/downloads/archive-7.2.1
+[8] https://developer.nvidia.com/downloads/jetson-agx-orin-developer-kit-carrier-board-design-files
+[9] https://developer.nvidia.com/embedded/secure/jetson/agx_orin/jetson_agx_orin_pinmux_config_template.xlsm
+[10] NVIDIA Jetson AGX Orin Series Modules
+[11] NVIDIA Jetson AGX Orin Developer Kit Carrier Board
 
 
 9. Known Issues
